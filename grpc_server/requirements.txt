@@ -1,4 +1,6 @@
 grpcio>=1.68
 grpcio-tools>=1.68
+grpcio-health-checking>=1.68
+grpcio-reflection>=1.68
 sqlalchemy>=2.0
 psycopg2-binary>=2.9

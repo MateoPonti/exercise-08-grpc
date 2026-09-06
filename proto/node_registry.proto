@@ -1,7 +1,47 @@
-// TODO: Define gRPC service
-// service NodeRegistry {
-//   rpc Register(RegisterRequest) returns (NodeResponse);
-//   rpc List(Empty) returns (NodeList);
-//   rpc Get(GetRequest) returns (NodeResponse);
-//   rpc Delete(DeleteRequest) returns (Empty);
-// }
+syntax = "proto3";
+
+package node_registry;
+
+// A registered node in the distributed system.
+message NodeInfo {
+  string id = 1;
+  string address = 2;
+  int32 port = 3;
+  string status = 4;          // e.g. "ALIVE"
+  int64 last_heartbeat = 5;   // unix epoch seconds (UTC)
+}
+
+message RegisterRequest {
+  string id = 1;
+  string address = 2;
+  int32 port = 3;
+}
+
+message GetRequest {
+  string id = 1;
+}
+
+message DeleteRequest {
+  string id = 1;
+}
+
+message NodeResponse {
+  NodeInfo node = 1;
+}
+
+message NodeList {
+  repeated NodeInfo nodes = 1;
+}
+
+message Empty {}
+
+service NodeRegistry {
+  // Registers a node, or refreshes it (upsert) if the id already exists.
+  rpc Register(RegisterRequest) returns (NodeResponse);
+  // Lists all currently registered nodes.
+  rpc List(Empty) returns (NodeList);
+  // Fetches a single node by id.
+  rpc Get(GetRequest) returns (NodeResponse);
+  // Removes a node from the registry.
+  rpc Delete(DeleteRequest) returns (Empty);
+}

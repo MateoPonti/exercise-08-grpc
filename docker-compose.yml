@@ -1,1 +1,43 @@
-# TODO: 3 services: db, grpc-server (50051), gateway (8080)
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-noderegistry}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-noderegistry}
+      POSTGRES_DB: ${POSTGRES_DB:-noderegistry}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-noderegistry}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  grpc-server:
+    build:
+      context: .
+      dockerfile: grpc_server/Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://noderegistry:noderegistry@db:5432/noderegistry}
+      GRPC_PORT: "50051"
+    ports:
+      - "50051:50051"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    environment:
+      GRPC_SERVER_ADDR: grpc-server:50051
+    ports:
+      - "8080:8080"
+    depends_on:
+      - grpc-server
+
+volumes:
+  db-data:
