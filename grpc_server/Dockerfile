@@ -2,6 +2,7 @@
 # image can reach the shared proto/ directory.
 FROM python:3.12-slim
 
+
 WORKDIR /app
 
 COPY grpc_server/requirements.txt ./grpc_server/requirements.txt
