@@ -14,7 +14,7 @@ from fastapi import FastAPI, HTTPException, Response
 import node_registry_pb2 as pb2
 import node_registry_pb2_grpc as pb2_grpc
 
-from pydantic import BaseModel
+from pydantic import AliasChoices, BaseModel, Field, field_validator
 
 GRPC_SERVER_ADDR = os.environ.get("GRPC_SERVER_ADDR", "grpc-server:50051")
 
@@ -27,9 +27,30 @@ _stub = pb2_grpc.NodeRegistryStub(_channel)
 
 
 class RegisterPayload(BaseModel):
-    id: str
-    address: str
-    port: int
+    """Tolerant of a couple of common field-naming/typing variants
+    (numeric ids, "host" instead of "address", etc.) so the gateway
+    doesn't 422 on requests that are semantically valid but don't match
+    the .proto's exact field names/types byte for byte."""
+
+    model_config = {"populate_by_name": True}
+
+    id: str = Field(validation_alias=AliasChoices("id", "node_id", "nodeId"))
+    address: str = Field(
+        validation_alias=AliasChoices("address", "host", "ip", "ip_address")
+    )
+    port: int = Field(validation_alias=AliasChoices("port"))
+
+    @field_validator("id", mode="before")
+    @classmethod
+    def _coerce_id_to_str(cls, v):
+        return str(v) if v is not None else v
+
+    @field_validator("port", mode="before")
+    @classmethod
+    def _coerce_port_to_int(cls, v):
+        if isinstance(v, str) and v.strip().lstrip("-").isdigit():
+            return int(v)
+        return v
 
 
 class NodeOut(BaseModel):
