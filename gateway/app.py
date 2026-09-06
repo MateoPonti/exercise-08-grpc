@@ -64,6 +64,8 @@ def health_check():
 
 
 @app.post("/nodes", response_model=NodeOut, status_code=201)
+@app.post("/registry", response_model=NodeOut, status_code=201)
+@app.post("/api/nodes", response_model=NodeOut, status_code=201)
 def register_node(payload: RegisterPayload):
     try:
         response = _stub.Register(
@@ -75,6 +77,8 @@ def register_node(payload: RegisterPayload):
 
 
 @app.get("/nodes", response_model=List[NodeOut])
+@app.get("/registry", response_model=List[NodeOut])
+@app.get("/api/nodes", response_model=List[NodeOut])
 def list_nodes():
     try:
         response = _stub.List(pb2.Empty())
@@ -84,6 +88,8 @@ def list_nodes():
 
 
 @app.get("/nodes/{node_id}", response_model=NodeOut)
+@app.get("/registry/{node_id}", response_model=NodeOut)
+@app.get("/api/nodes/{node_id}", response_model=NodeOut)
 def get_node(node_id: str):
     try:
         response = _stub.Get(pb2.GetRequest(id=node_id))
@@ -93,6 +99,8 @@ def get_node(node_id: str):
 
 
 @app.delete("/nodes/{node_id}", status_code=204)
+@app.delete("/registry/{node_id}", status_code=204)
+@app.delete("/api/nodes/{node_id}", status_code=204)
 def delete_node(node_id: str):
     try:
         _stub.Delete(pb2.DeleteRequest(id=node_id))
